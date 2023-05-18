@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from xml.etree import ElementTree
 import requests
 import json
+
+from xml_to_json_converter import *
 
 
 app = FastAPI()
@@ -48,19 +49,7 @@ def get_user_info(username: str):
 @app.get("/hot")
 def get_hot_games(limit: int = None):
     response = requests.get("https://www.boardgamegeek.com/xmlapi2/hot?type=boardgame")
-    root = ElementTree.fromstring(response.content)
-    items = []
-    for idx, item in enumerate(root.findall('item')):
-        if limit and idx == limit:
-            break
-        items.append({
-            "id": item.get('id'),
-            "rank": item.get('rank'),
-            "thumbnail": item.find('thumbnail').get('value'),
-            "name": item.find('name').get('value'),
-            "yearpublished": item.find('yearpublished').get('value')
-        })
-    return {"items": items}
+    return hot_converter(response.content, limit)
 
 
 @app.get("/collection/{username}")
@@ -70,11 +59,11 @@ def get_user_collection(username: str):
     return response.content
 
 
-@app.get("/plays/{username}/{date1}/{date2}")
-def get_user_plays(username: str, date1: str, date2: str):
+@app.get("/plays/{username}")
+def get_user_plays(username: str, limit: int = None):
     response = requests.get(
-        f"https://www.boardgamegeek.com/xmlapi2/plays?username={username}&mindate={date1}&maxdate={date2}")
-    return response.content
+        f"https://www.boardgamegeek.com/xmlapi2/plays?username={username}")
+    return play_converter(response.content, limit)
 
 
 if __name__ == "__main__":
