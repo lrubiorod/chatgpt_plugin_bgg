@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from xml.etree import ElementTree
 import requests
 import json
 
@@ -8,7 +9,7 @@ import json
 app = FastAPI()
 
 origins = [
-    "https://chat.openai.com",  # Permitir solicitudes CORS desde este origen
+    "https://chat.openai.com",  # Allow CORS requests from this origin.
 ]
 
 app.add_middleware(
@@ -45,9 +46,21 @@ def get_user_info(username: str):
 
 
 @app.get("/hot")
-def get_hot_games():
+def get_hot_games(limit: int = None):
     response = requests.get("https://www.boardgamegeek.com/xmlapi2/hot?type=boardgame")
-    return response.content
+    root = ElementTree.fromstring(response.content)
+    items = []
+    for idx, item in enumerate(root.findall('item')):
+        if limit and idx == limit:
+            break
+        items.append({
+            "id": item.get('id'),
+            "rank": item.get('rank'),
+            "thumbnail": item.find('thumbnail').get('value'),
+            "name": item.find('name').get('value'),
+            "yearpublished": item.find('yearpublished').get('value')
+        })
+    return {"items": items}
 
 
 @app.get("/collection/{username}")
