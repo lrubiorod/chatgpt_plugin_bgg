@@ -6,7 +6,6 @@ import json
 
 from xml_to_json_converter import *
 
-
 app = FastAPI()
 
 origins = [
@@ -46,7 +45,16 @@ def get_user_info(username: str):
     return response.content
 
 
-@app.get("/hot")
+@app.get(
+    "/hot",
+    tags=["Games"],
+    description=(
+            "This endpoint retrieves the 'hottest' board games from BoardGameGeek, "
+            "based on visits and favorites. Use the 'limit' parameter to restrict "
+            "the number of games. Each game's JSON includes: 'id', 'rank', 'thumbnail', "
+            "'name', and 'yearpublished'."
+    ),
+)
 def get_hot_games(limit: int = None):
     response = requests.get("https://www.boardgamegeek.com/xmlapi2/hot?type=boardgame")
     return hot_converter(response.content, limit)
