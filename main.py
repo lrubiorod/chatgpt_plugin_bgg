@@ -1,56 +1,70 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+import requests
 import json
 
-import quart
-import quart_cors
-from quart import request
 
-app = quart_cors.cors(quart.Quart(__name__), allow_origin="https://chat.openai.com")
+app = FastAPI()
 
-# Keep track of todo's. Does not persist if Python session is restarted.
-_TODOS = {}
+origins = [
+    "https://chat.openai.com",  # Permitir solicitudes CORS desde este origen
+]
 
-@app.post("/todos/<string:username>")
-async def add_todo(username):
-    request = await quart.request.get_json(force=True)
-    if username not in _TODOS:
-        _TODOS[username] = []
-    _TODOS[username].append(request["todo"])
-    return quart.Response(response='OK', status=200)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/todos/<string:username>")
-async def get_todos(username):
-    return quart.Response(response=json.dumps(_TODOS.get(username, [])), status=200)
 
-@app.delete("/todos/<string:username>")
-async def delete_todo(username):
-    request = await quart.request.get_json(force=True)
-    todo_idx = request["todo_idx"]
-    # fail silently, it's a simple plugin
-    if 0 <= todo_idx < len(_TODOS[username]):
-        _TODOS[username].pop(todo_idx)
-    return quart.Response(response='OK', status=200)
+@app.get("/.well-known/ai-plugin.json", include_in_schema=False)
+async def read_manifest():
+    try:
+        with open("./manifest.json", "r") as f:
+            data = json.load(f)
+        return data
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Item not found")
+
 
 @app.get("/logo.png")
-async def plugin_logo():
-    filename = 'logo.png'
-    return await quart.send_file(filename, mimetype='image/png')
+async def get_logo():
+    try:
+        return FileResponse("logo.png", media_type="image/png")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Logo not found")
 
-@app.get("/.well-known/ai-plugin.json")
-async def plugin_manifest():
-    host = request.headers['Host']
-    with open("./.well-known/ai-plugin.json") as f:
-        text = f.read()
-        return quart.Response(text, mimetype="text/json")
 
-@app.get("/openapi.yaml")
-async def openapi_spec():
-    host = request.headers['Host']
-    with open("openapi.yaml") as f:
-        text = f.read()
-        return quart.Response(text, mimetype="text/yaml")
+@app.get("/user/{username}")
+def get_user_info(username: str):
+    response = requests.get(f"https://www.boardgamegeek.com/xmlapi2/user?name={username}&buddies=1")
+    return response.content
 
-def main():
-    app.run(debug=True, host="0.0.0.0", port=5003)
+
+@app.get("/hot")
+def get_hot_games():
+    response = requests.get("https://www.boardgamegeek.com/xmlapi2/hot?type=boardgame")
+    return response.content
+
+
+@app.get("/collection/{username}")
+def get_user_collection(username: str):
+    response = requests.get(
+        f"https://www.boardgamegeek.com/xmlapi2/collection?username={username}&subtype=boardgame&excludesubtype=boardgameexpansion")
+    return response.content
+
+
+@app.get("/plays/{username}/{date1}/{date2}")
+def get_user_plays(username: str, date1: str, date2: str):
+    response = requests.get(
+        f"https://www.boardgamegeek.com/xmlapi2/plays?username={username}&mindate={date1}&maxdate={date2}")
+    return response.content
+
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+
+    uvicorn.run("main:app", host="0.0.0.0", port=5003, log_level="info")

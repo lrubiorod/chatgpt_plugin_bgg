@@ -1,6 +1,6 @@
-# ChatGPT plugins quickstart
+# ChatGPT BoardGameGeek Plugin
 
-Get a todo list ChatGPT plugin up and running in under 5 minutes using Python. If you do not already have plugin developer access, please [join the waitlist](https://openai.com/waitlist/plugins).
+Get a board games assistant ChatGPT plugin using BoardGameGeek information. If you do not already have plugin developer access, please [join the waitlist](https://openai.com/waitlist/plugins).
 
 ## Setup
 
@@ -24,7 +24,12 @@ Once the local server is running:
 4. Select "Develop your own plugin"
 5. Enter in `localhost:5003` since this is the URL the server is running on locally, then select "Find manifest file".
 
-The plugin should now be installed and enabled! You can start with a question like "What is on my todo list" and then try adding something to it as well! 
+The plugin should now be installed and enabled! You can start with a question like "What is the top ten list of hotness games on BGG?"
+
+## Data Source and Terms of Use
+
+Please note that all the data utilized in this plugin is sourced from the [BoardGameGeek](https://boardgamegeek.com/) API. You should ensure compliance with their [Terms of Use](https://boardgamegeek.com/wiki/page/XML_API_Terms_of_Use) when using this plugin.
+
 
 ## Getting help
 

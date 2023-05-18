@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "BGG",
+  "name_for_model": "bgg",
+  "description_for_human": "BGG",
+  "description_for_model": "This plugin provides an interface to fetch user and board game data from the BoardGameGeek platform, including user profiles, hot games, user collections, and user play history.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:5003/openapi.json",
+    "is_user_authenticated": false
+  },
+  "logo_url": "http://localhost:5003/logo.png",
+  "contact_email": "l.rubiorod@gmail.com",
+  "legal_info_url": "http://example.com/legal"
+}
