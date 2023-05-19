@@ -17,7 +17,7 @@ def hot_converter(xml_data, limit):
     return {"items": items}
 
 
-def play_converter(xml_data, limit):
+def play_converter(xml_data, limit, with_players):
     root = ElementTree.fromstring(xml_data)
     plays = []
 
@@ -26,14 +26,16 @@ def play_converter(xml_data, limit):
             break
         item = play.find('item')
         players = []
-        for player in play.findall('players/player'):
-            players.append({
-                "username": player.attrib["username"],
-                "userid": player.attrib["userid"],
-                "name": player.attrib["name"],
-                "score": player.attrib["score"],
-                "win": player.attrib["win"]
-            })
+
+        if with_players:
+            for player in play.findall('players/player'):
+                players.append({
+                    "username": player.attrib["username"],
+                    "userid": player.attrib["userid"],
+                    "name": player.attrib["name"],
+                    "score": player.attrib["score"],
+                    "win": player.attrib["win"]
+                })
 
         plays.append({
             "id": play.attrib["id"],
