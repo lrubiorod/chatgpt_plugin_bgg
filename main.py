@@ -69,10 +69,18 @@ async def get_logo():
         raise HTTPException(status_code=404, detail="Logo not found")
 
 
-@app.get("/user/{username}")
+@app.get(
+    "/user/{username}",
+    tags=["Users"],
+    description=(
+            "This endpoint retrieves detailed information for a specific user from "
+            "BoardGameGeek, including the user's name, state, country, and buddies. "
+            "Replace 'username' in the URL with the target user's username."
+    ),
+)
 def get_user_info(username: str):
     response = get_url(f"https://www.boardgamegeek.com/xmlapi2/user?name={username}&buddies=1")
-    return response.content
+    return user_converter(response.content)
 
 
 @app.get(

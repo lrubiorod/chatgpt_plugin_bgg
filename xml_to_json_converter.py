@@ -17,6 +17,37 @@ def hot_converter(xml_data, limit):
     return {"items": items}
 
 
+def user_converter(xml_data):
+    root = ElementTree.fromstring(xml_data)
+    user = root
+    buddies_list = []
+    for buddy in user.find('buddies'):
+        buddies_list.append({
+            "id": buddy.get('id'),
+            "name": buddy.get('name'),
+        })
+    user_json = {
+        "user": {
+            "id": user.get('id'),
+            "name": user.get('name'),
+            "first_name": user.find('firstname').get('value'),
+            "last_name": user.find('lastname').get('value'),
+            "avatar_link": user.find('avatarlink').get('value'),
+            "year_registered": user.find('yearregistered').get('value'),
+            "last_login": user.find('lastlogin').get('value'),
+            "state_or_province": user.find('stateorprovince').get('value'),
+            "country": user.find('country').get('value'),
+            "trade_rating": user.find('traderating').get('value'),
+            "buddies": {
+                "total": user.find('buddies').get('total'),
+                "page": user.find('buddies').get('page'),
+                "buddy": buddies_list
+            }
+        }
+    }
+    return user_json
+
+
 def play_converter(xml_data, limit, with_players):
     root = ElementTree.fromstring(xml_data)
     plays = []
