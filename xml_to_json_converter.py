@@ -61,29 +61,29 @@ def play_converter(xml_data, limit, with_players):
         if with_players:
             for player in play.findall('players/player'):
                 players.append({
-                    "username": player.attrib["username"],
-                    "userid": player.attrib["userid"],
-                    "name": player.attrib["name"],
-                    "score": player.attrib["score"],
-                    "win": player.attrib["win"]
+                    "username": player.get("username"),
+                    "userid": player.get("userid"),
+                    "name": player.get("name"),
+                    "score": player.get("score"),
+                    "win": player.get("win")
                 })
 
         plays.append({
-            "id": play.attrib["id"],
-            "date": play.attrib["date"],
-            "location": play.attrib["location"],
+            "id": play.get("id"),
+            "date": play.get("date"),
+            "location": play.get("location"),
             "item": {
-                "name": item.attrib["name"],
-                "objecttype": item.attrib["objecttype"],
-                "objectid": item.attrib["objectid"],
+                "name": item.get("name"),
+                "objecttype": item.get("objecttype"),
+                "objectid": item.get("objectid"),
             },
-            "players": players,
+            "players": players if with_players else None,
         })
 
     return {
-        "username": root.attrib["username"],
-        "userid": root.attrib["userid"],
-        "total": root.attrib["total"],
-        "page": root.attrib["page"],
+        "username": root.get("username"),
+        "userid": root.get("userid"),
+        "total": root.get("total"),
+        "page": root.get("page"),
         "plays": plays
     }
