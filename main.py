@@ -50,6 +50,9 @@ class PlayParameters(BaseModel):
     page: Optional[int] = None
 
 
+allowed_status = ["own", "prevowned", "wishlist", "wanttoplay", "want", "wanttobuy", "preordered", "fortrade"]
+
+
 # Routes
 @app.get("/.well-known/ai-plugin.json", include_in_schema=False)
 async def read_manifest():
@@ -98,11 +101,22 @@ def get_hot_games(limit: int = None):
     return hot_converter(response.content, limit)
 
 
-@app.get("/collection/{username}")
-def get_user_collection(username: str):
+@app.get(
+    "/collection/{username}/{status}",
+    tags=["Games"],
+    description=(
+            "Retrieves the BoardGameGeek collection of a user based on the provided "
+            "status (own, prevowned, wishlist, etc.). Returns the collection in a "
+            "parsed format or a processing message. The 'page' parameter can be used "
+            "to paginate the results, with 100 items per page by default."
+    ),
+)
+def get_user_collection(username: str, status: str, page: int = 1):
+    if status not in allowed_status:
+        raise HTTPException(status_code=400, detail=f"Status must be one of {allowed_status}")
     response = get_url(
-        f"https://www.boardgamegeek.com/xmlapi2/collection?username={username}&subtype=boardgame&excludesubtype=boardgameexpansion")
-    return response.content
+        f"https://www.boardgamegeek.com/xmlapi2/collection?username={username}&{status}=1")
+    return collection_converter(response.content, page)
 
 
 @app.get(
