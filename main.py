@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -62,6 +63,7 @@ class CollectionParameters(BaseModel):
 
 
 allowed_status = ["own", "prevowned", "wishlist", "wanttoplay", "want", "wanttobuy", "preordered", "fortrade"]
+MAX_RETRIES = 3
 
 
 # Routes
@@ -136,8 +138,19 @@ def get_user_collection(username: str, status: str, collection_params: Collectio
             url_params[key] = value
 
     url = f"https://www.boardgamegeek.com/xmlapi2/collection?{urlencode(url_params)}"
-    response = get_url(url)
-    return collection_converter(response.content, collection_params.page)
+
+    for _ in range(MAX_RETRIES):
+        response = get_url(url)
+        result = collection_converter(response.content, collection_params.page)
+
+        # If the result is not a "message" retry
+        if "message" not in result:
+            return result
+
+        time.sleep(2)
+
+    # If after all retries, we still get a message, return it
+    return result
 
 
 @app.get(
