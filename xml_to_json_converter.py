@@ -116,11 +116,16 @@ def collection_converter(xml_data, page):
         year_published_elem = item.find('yearpublished')
         year_published = year_published_elem.text if year_published_elem is not None else 'unknown'
 
+        # Safely get the numplays text or default to 'unknown'
+        num_plays_elem = item.find('numplays')
+        num_plays = num_plays_elem.text if num_plays_elem is not None else 'unknown'
+
         item_json = {
             "id": item.get("objectid"),
             "name": item.find('name').text,
             "year_published": year_published,
             "pos": index + 1,
+            "num_plays": num_plays,
         }
         items.append(item_json)
 

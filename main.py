@@ -50,6 +50,17 @@ class PlayParameters(BaseModel):
     page: Optional[int] = None
 
 
+class CollectionParameters(BaseModel):
+    page: Optional[int] = 1
+    id: Optional[str] = None
+    minrating: Optional[str] = None
+    rating: Optional[str] = None
+    minbggrating: Optional[str] = None
+    bggrating: Optional[str] = None
+    minplays: Optional[int] = None
+    maxplays: Optional[int] = None
+
+
 allowed_status = ["own", "prevowned", "wishlist", "wanttoplay", "want", "wanttobuy", "preordered", "fortrade"]
 
 
@@ -105,18 +116,28 @@ def get_hot_games(limit: int = None):
     "/collection/{username}/{status}",
     tags=["Games"],
     description=(
-            "Retrieves the BoardGameGeek collection of a user based on the provided "
-            "status (own, prevowned, wishlist, etc.). Returns the collection in a "
-            "parsed format or a processing message. The 'page' parameter can be used "
-            "to paginate the results, with 100 items per page by default."
+            "Retrieves a BoardGameGeek user's collection based on status (own, prevowned, wishlist, etc.). "
+            "Filter options include item id, personal and BGG ratings, and number of plays. "
+            "Pagination is supported via the 'page' parameter, showing up to 100 items per page."
     ),
 )
-def get_user_collection(username: str, status: str, page: int = 1):
+def get_user_collection(username: str, status: str, collection_params: CollectionParameters = Depends()):
     if status not in allowed_status:
         raise HTTPException(status_code=400, detail=f"Status must be one of {allowed_status}")
-    response = get_url(
-        f"https://www.boardgamegeek.com/xmlapi2/collection?username={username}&{status}=1")
-    return collection_converter(response.content, page)
+
+    # Build the URL
+    url_params = {
+        "username": username,
+        status: 1
+    }
+
+    for key, value in collection_params.dict().items():
+        if value is not None:
+            url_params[key] = value
+
+    url = f"https://www.boardgamegeek.com/xmlapi2/collection?{urlencode(url_params)}"
+    response = get_url(url)
+    return collection_converter(response.content, collection_params.page)
 
 
 @app.get(
