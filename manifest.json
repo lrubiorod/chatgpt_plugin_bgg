@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "BGG",
   "name_for_model": "bgg",
-  "description_for_human": "BGG",
-  "description_for_model": "This plugin provides an interface to fetch user and board game data from the BoardGameGeek platform, including user profiles, hot games, user collections, and user play history.",
+  "description_for_human": "BGG: An interface for BoardGameGeek API. Provides game data, user info, popular games, and more.",
+  "description_for_model": "A FastAPI server providing an interface to interact with the BoardGameGeek API. It offers routes for searching board game data, fetching detailed user information, retrieving popular games, obtaining detailed game data, user collections, and user play history.",
   "auth": {
     "type": "none"
   },
