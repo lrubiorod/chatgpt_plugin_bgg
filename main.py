@@ -86,6 +86,20 @@ async def get_logo():
 
 
 @app.get(
+    "/search/{query}",
+    tags=["Users"],
+    description=(
+        "Retrieves board game data from BoardGameGeek API based on the provided query. "
+        "The response is a JSON object categorizing items by type, with details such "
+        "as 'id', 'name', and 'year published'."
+    ),
+)
+def get_user_info(query: str):
+    response = get_url(f"https://www.boardgamegeek.com/xmlapi2/search?query={query}")
+    return search_converter(response.content)
+
+
+@app.get(
     "/user/{username}",
     tags=["Users"],
     description=(

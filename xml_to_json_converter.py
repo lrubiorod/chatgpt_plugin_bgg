@@ -1,6 +1,7 @@
 from xml.etree import ElementTree
 
 PAGE_SIZE = 100
+SEARCH_TAGS = {'boardgame', 'boardgameexpansion'}
 LINK_TAGS = ['boardgamecategory', 'boardgamemechanic', 'boardgamefamily', 'boardgamedesigner', 'boardgameartist',
              'boardgamepublisher']
 IGNORED_RATING_TAGS = {'stddev', 'median', 'trading', 'wanting', 'wishing', 'numcomments', 'numweights'}
@@ -30,6 +31,25 @@ def hot_converter(xml_data, limit):
             "year_published": get_value(item, 'yearpublished')
         })
     return {"items": items}
+
+
+def search_converter(xml_data):
+    root = ElementTree.fromstring(xml_data)
+
+    items_dict = {search_type: [] for search_type in SEARCH_TAGS}
+
+    for item in root.findall('item'):
+        item_type = item.get('type')
+        if item_type in items_dict:
+            item_info = {
+                "id": item.get('id'),
+                "name": get_value(item, 'name'),
+                "year_published": get_value(item, 'yearpublished')
+            }
+
+            items_dict[item_type].append(item_info)
+
+    return items_dict
 
 
 def extract_result_votes(results):
