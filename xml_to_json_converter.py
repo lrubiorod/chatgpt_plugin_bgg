@@ -1,6 +1,19 @@
 from xml.etree import ElementTree
 
 PAGE_SIZE = 100
+LINK_TAGS = ['boardgamecategory', 'boardgamemechanic', 'boardgamefamily', 'boardgamedesigner', 'boardgameartist',
+             'boardgamepublisher']
+IGNORED_RATING_TAGS = {'stddev', 'median', 'trading', 'wanting', 'wishing', 'numcomments', 'numweights'}
+
+
+def get_value(element, tag):
+    found_element = element.find(tag)
+    return found_element.get('value') if found_element is not None else None
+
+
+def get_text(element, tag):
+    found_element = element.find(tag)
+    return found_element.text if found_element is not None else 'unknown'
 
 
 def hot_converter(xml_data, limit):
@@ -12,9 +25,9 @@ def hot_converter(xml_data, limit):
         items.append({
             "id": item.get('id'),
             "rank": item.get('rank'),
-            "thumbnail": item.find('thumbnail').get('value'),
-            "name": item.find('name').get('value'),
-            "yearpublished": item.find('yearpublished').get('value')
+            "thumbnail": get_value(item, 'thumbnail'),
+            "name": get_value(item, 'name'),
+            "year_published": get_value(item, 'yearpublished')
         })
     return {"items": items}
 
@@ -47,7 +60,7 @@ def thing_converter(xml_data):
                     language_dependence = max(result_votes, key=result_votes.get)
 
         # Find links
-        link_dict = {link_type: [] for link_type in ['boardgamecategory', 'boardgamemechanic', 'boardgamefamily', 'boardgamedesigner', 'boardgameartist', 'boardgamepublisher']}
+        link_dict = {link_type: [] for link_type in LINK_TAGS}
         for link in item.findall('link'):
             link_type = link.get('type')
             if link_type in link_dict and (link_type != 'boardgamepublisher' or len(link_dict[link_type]) == 0):
@@ -55,43 +68,41 @@ def thing_converter(xml_data):
 
         # Find ratings
         ratings_dict = {}
-        ignored_tags = {'stddev', 'median', 'trading', 'wanting', 'wishing', 'numcomments', 'numweights'}
         for ratings in item.find('statistics').find('ratings'):
             if ratings.tag == 'ranks':
                 ranks = [{k: v for k, v in rank.attrib.items()} for rank in ratings.findall('rank')]
                 ratings_dict['ranks'] = ranks
-            elif ratings.tag not in ignored_tags:
+            elif ratings.tag not in IGNORED_RATING_TAGS:
                 ratings_dict[ratings.tag] = ratings.get('value')
 
         # Item dictionary
         item_dict = {
             "type": item.get('type'),
             "id": item.get('id'),
-            "thumbnail": item.find('thumbnail').text,
-            "name": item.find('name[@type="primary"]').get('value'),
-            "description": item.find('description').text,
-            "year_published": item.find('yearpublished').get('value'),
-            "min_players": item.find('minplayers').get('value'),
-            "max_players": item.find('maxplayers').get('value'),
-            "playing_time": item.find('playingtime').get('value'),
-            "min_playtime": item.find('minplaytime').get('value'),
-            "max_playtime": item.find('maxplaytime').get('value'),
-            "min_age": item.find('minage').get('value'),
-            "poll": {
-                "suggested_num_players": suggested_num_players,
-                "suggested_player_age": suggested_player_age,
-                "language_dependence": language_dependence
-            },
-            "link": link_dict,
-            "statistics": {
-                "ratings": ratings_dict
-            }
+            "thumbnail": get_text(item, 'thumbnail'),
+            "name": get_value(item, 'name[@type="primary"]'),
+            "description": get_text(item, 'description'),
+            "year_published": get_value(item, 'yearpublished'),
+            "min_players": get_value(item, 'minplayers'),
+            "max_players": get_value(item, 'maxplayers'),
+            "playing_time": get_value(item, 'playingtime'),
+            "min_play_time": get_value(item, 'minplaytime'),
+            "max_play_time": get_value(item, 'maxplaytime'),
+            "categories": link_dict['boardgamecategory'],
+            "mechanics": link_dict['boardgamemechanic'],
+            "families": link_dict['boardgamefamily'],
+            "designers": link_dict['boardgamedesigner'],
+            "artists": link_dict['boardgameartist'],
+            "publishers": link_dict['boardgamepublisher'],
+            "suggested_num_players": suggested_num_players,
+            "suggested_player_age": suggested_player_age,
+            "language_dependence": language_dependence,
+            "ratings": ratings_dict
         }
 
         items.append(item_dict)
 
     return {"items": items}
-
 
 
 def user_converter(xml_data):
@@ -107,14 +118,14 @@ def user_converter(xml_data):
         "user": {
             "id": user.get('id'),
             "name": user.get('name'),
-            "first_name": user.find('firstname').get('value'),
-            "last_name": user.find('lastname').get('value'),
-            "avatar_link": user.find('avatarlink').get('value'),
-            "year_registered": user.find('yearregistered').get('value'),
-            "last_login": user.find('lastlogin').get('value'),
-            "state_or_province": user.find('stateorprovince').get('value'),
-            "country": user.find('country').get('value'),
-            "trade_rating": user.find('traderating').get('value'),
+            "first_name": get_value(user, 'firstname'),
+            "last_name": get_value(user, 'lastname'),
+            "avatar_link": get_value(user, 'avatarlink'),
+            "year_registered": get_value(user, 'yearregistered'),
+            "last_login": get_value(user, 'lastlogin'),
+            "state_or_province": get_value(user, 'stateorprovince'),
+            "country": get_value(user, 'country'),
+            "trade_rating": get_value(user, 'traderating'),
             "buddies": {
                 "total": user.find('buddies').get('total'),
                 "page": user.find('buddies').get('page'),
@@ -151,8 +162,8 @@ def play_converter(xml_data, limit, with_players):
             "location": play.get("location"),
             "item": {
                 "name": item.get("name"),
-                "objecttype": item.get("objecttype"),
-                "objectid": item.get("objectid"),
+                "object_type": item.get("objecttype"),
+                "object_id": item.get("objectid"),
             },
             "players": players if with_players else None,
         })
@@ -187,20 +198,12 @@ def collection_converter(xml_data, page):
         if index < start_index:
             continue
 
-        # Safely get the yearpublished text or default to 'unknown'
-        year_published_elem = item.find('yearpublished')
-        year_published = year_published_elem.text if year_published_elem is not None else 'unknown'
-
-        # Safely get the numplays text or default to 'unknown'
-        num_plays_elem = item.find('numplays')
-        num_plays = num_plays_elem.text if num_plays_elem is not None else 'unknown'
-
         item_json = {
             "id": item.get("objectid"),
             "name": item.find('name').text,
-            "year_published": year_published,
+            "year_published": get_text(item, 'yearpublished'),
             "pos": index + 1,
-            "num_plays": num_plays,
+            "num_plays": get_text(item, 'numplays'),
         }
         items.append(item_json)
 
