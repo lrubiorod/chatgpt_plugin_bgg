@@ -103,10 +103,10 @@ def get_user_info(username: str):
     "/hot",
     tags=["Games"],
     description=(
-            "This endpoint retrieves the 'hottest' board games from BoardGameGeek, "
-            "based on visits and favorites. Use the 'limit' parameter to restrict "
-            "the number of games. Each game's JSON includes: 'id', 'rank', 'thumbnail', "
-            "'name', and 'yearpublished'."
+        "Retrieve the 'hottest' board games from BoardGameGeek, "
+        "based on visits and favorites. Use the 'limit' parameter to restrict "
+        "the number of games. Each game's JSON includes: 'id', 'rank', 'thumbnail', "
+        "'name', and 'yearpublished'."
     ),
 )
 def get_hot_games(limit: int = None):
@@ -115,12 +115,24 @@ def get_hot_games(limit: int = None):
 
 
 @app.get(
+    "/thing/{game_id}",
+    tags=["Games"],
+    description=(
+        "Retrieve detailed information and statistics for a specified game using its unique ID."
+    ),
+)
+def get_game_info(game_id: int):
+    response = get_url(f"https://www.boardgamegeek.com/xmlapi2/thing?id={game_id}&stats=1")
+    return thing_converter(response.content)
+
+
+@app.get(
     "/collection/{username}/{status}",
     tags=["Games"],
     description=(
-            "Retrieves a BoardGameGeek user's collection based on status (own, prevowned, wishlist, etc.). "
-            "Filter options include item id, personal and BGG ratings, and number of plays. "
-            "Pagination is supported via the 'page' parameter, showing up to 100 items per page."
+        "Retrieves a BoardGameGeek user's collection based on status (own, prevowned, wishlist, etc.). "
+        "Filter options include item id, personal and BGG ratings, and number of plays. "
+        "Pagination is supported via the 'page' parameter, showing up to 100 items per page."
     ),
 )
 def get_user_collection(username: str, status: str, collection_params: CollectionParameters = Depends()):
@@ -157,10 +169,10 @@ def get_user_collection(username: str, status: str, collection_params: Collectio
     "/plays/{username}",
     tags=["Games"],
     description=(
-            "This endpoint retrieves a user's board game plays from BoardGameGeek. "
-            "It allows optional parameters to filter the results: limit, "
-            "players involved, specific game ID, date range to narrow down the time period, "
-            "type and subtype of the game, and the page number for pagination. "
+        "Retrieve a user's board game plays from BoardGameGeek. "
+        "It allows optional parameters to filter the results: limit, "
+        "players involved, specific game ID, date range to narrow down the time period, "
+        "type and subtype of the game, and the page number for pagination. "
     ),
 )
 def get_user_plays(username: str, play_params: PlayParameters = Depends()):

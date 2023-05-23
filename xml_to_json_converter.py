@@ -19,6 +19,81 @@ def hot_converter(xml_data, limit):
     return {"items": items}
 
 
+def extract_result_votes(results):
+    return {result.get('value'): int(result.get('numvotes')) for result in results.findall('result')}
+
+
+def thing_converter(xml_data):
+    root = ElementTree.fromstring(xml_data)
+    items = []
+
+    for item in root.findall('item'):
+        # Find poll results
+        suggested_num_players = {}
+        suggested_player_age = None
+        language_dependence = None
+        for poll in item.findall('poll'):
+            if poll.get('name') == 'suggested_numplayers':
+                for results in poll.findall('results'):
+                    num_players = results.get('numplayers')
+                    result_votes = extract_result_votes(results)
+                    suggested_num_players[num_players] = max(result_votes, key=result_votes.get)
+            else:
+                results = poll.find('results')
+                result_votes = extract_result_votes(results)
+                if poll.get('name') == 'suggested_playerage':
+                    suggested_player_age = max(result_votes, key=result_votes.get)
+                elif poll.get('name') == 'language_dependence':
+                    language_dependence = max(result_votes, key=result_votes.get)
+
+        # Find links
+        link_dict = {link_type: [] for link_type in ['boardgamecategory', 'boardgamemechanic', 'boardgamefamily', 'boardgamedesigner', 'boardgameartist', 'boardgamepublisher']}
+        for link in item.findall('link'):
+            link_type = link.get('type')
+            if link_type in link_dict and (link_type != 'boardgamepublisher' or len(link_dict[link_type]) == 0):
+                link_dict[link_type].append(link.get('value'))
+
+        # Find ratings
+        ratings_dict = {}
+        ignored_tags = {'stddev', 'median', 'trading', 'wanting', 'wishing', 'numcomments', 'numweights'}
+        for ratings in item.find('statistics').find('ratings'):
+            if ratings.tag == 'ranks':
+                ranks = [{k: v for k, v in rank.attrib.items()} for rank in ratings.findall('rank')]
+                ratings_dict['ranks'] = ranks
+            elif ratings.tag not in ignored_tags:
+                ratings_dict[ratings.tag] = ratings.get('value')
+
+        # Item dictionary
+        item_dict = {
+            "type": item.get('type'),
+            "id": item.get('id'),
+            "thumbnail": item.find('thumbnail').text,
+            "name": item.find('name[@type="primary"]').get('value'),
+            "description": item.find('description').text,
+            "year_published": item.find('yearpublished').get('value'),
+            "min_players": item.find('minplayers').get('value'),
+            "max_players": item.find('maxplayers').get('value'),
+            "playing_time": item.find('playingtime').get('value'),
+            "min_playtime": item.find('minplaytime').get('value'),
+            "max_playtime": item.find('maxplaytime').get('value'),
+            "min_age": item.find('minage').get('value'),
+            "poll": {
+                "suggested_num_players": suggested_num_players,
+                "suggested_player_age": suggested_player_age,
+                "language_dependence": language_dependence
+            },
+            "link": link_dict,
+            "statistics": {
+                "ratings": ratings_dict
+            }
+        }
+
+        items.append(item_dict)
+
+    return {"items": items}
+
+
+
 def user_converter(xml_data):
     root = ElementTree.fromstring(xml_data)
     user = root
