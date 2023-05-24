@@ -25,7 +25,7 @@ Once the local server is running:
 4. Select "Develop your own plugin"
 5. Enter in `localhost:5003` since this is the URL the server is running on locally, then select "Find manifest file".
 
-If you prefer not to run the plugin locally, you may use the following URL server: `bggplugin-xsmbfdkqya-no.a.run.app`. 
+If you prefer not to run the plugin locally, you may use the following URL server: `bggassistant-xsmbfdkqya-no.a.run.app`. 
 Please note that there may be instances when this server is inactive.
 
 The plugin has been successfully installed and activated! To begin, you may pose a question such as, 

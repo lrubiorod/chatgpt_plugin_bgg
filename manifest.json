@@ -2,7 +2,7 @@
   "schema_version": "v1",
   "name_for_human": "BoardGameGeek Assistant",
   "name_for_model": "bgg_assistant",
-  "description_for_human": "Explore the world of board games with the BoardGameGeek Assistant! Search games, fetch user info, view hot games, and track your collection and plays.",
+  "description_for_human": "Discover board games with BoardGameGeek Assistant! Find games, see trending games, monitor your plays and collection...",
   "description_for_model": "A FastAPI server providing an interface to interact with the BoardGameGeek API. It offers routes for searching board game data, fetching detailed user information, retrieving popular games, obtaining detailed game data, user collections, and user play history.",
   "auth": {
     "type": "none"
