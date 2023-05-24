@@ -87,7 +87,7 @@ async def get_logo():
 
 @app.get(
     "/search/{query}",
-    tags=["Users"],
+    tags=["Games"],
     description=(
         "Retrieves board game data from BoardGameGeek API based on the provided query. "
         "The response is a JSON object categorizing items by type, with details such "
@@ -181,7 +181,7 @@ def get_user_collection(username: str, status: str, collection_params: Collectio
 
 @app.get(
     "/plays/{username}",
-    tags=["Games"],
+    tags=["Plays"],
     description=(
         "Retrieve a user's board game plays from BoardGameGeek. "
         "It allows optional parameters to filter the results: limit, "
