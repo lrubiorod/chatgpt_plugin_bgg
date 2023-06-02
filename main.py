@@ -84,14 +84,24 @@ async def get_logo():
     "/search/{query}",
     tags=["Games"],
     description=(
-        "Retrieves board game data from BoardGameGeek API based on the provided query. "
+        "Retrieves board game data from BoardGameGeek based on the query. "
+        "Set 'exact' to true for precise search, or false for a broader one. "
         "The response is a JSON object categorizing items by type, with details such "
         "as 'id', 'name', and 'year published'."
     ),
 )
-def search_query(query: str):
-    response = get_url(f"https://www.boardgamegeek.com/xmlapi2/search?query={query}")
-    return search_converter(response.content)
+def search_query(query: str, exact: Optional[bool] = True):
+    response = get_url(f"https://www.boardgamegeek.com/xmlapi2/search?query={query}&exact={int(exact)}")
+    result = search_converter(response.content)
+
+    if exact and result == {"boardgameexpansion": [], "boardgame": []}:
+        response = get_url(f"https://www.boardgamegeek.com/xmlapi2/search?query={query}")
+        result = search_converter(response.content)
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return result
 
 
 @app.get(
