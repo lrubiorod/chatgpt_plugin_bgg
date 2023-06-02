@@ -41,13 +41,8 @@ def get_url(url: str):
 
 # Parameters model for /plays/{username}
 class PlayParameters(BaseModel):
-    limit: Optional[int] = None
-    with_players: Optional[bool] = None
-    id: Optional[int] = None
-    mindate: Optional[date] = None
-    maxdate: Optional[date] = None
-    type: Optional[str] = None
-    subtype: Optional[str] = None
+    start: Optional[date] = None
+    end: Optional[date] = None
     page: Optional[int] = None
 
 
@@ -183,23 +178,26 @@ def get_user_collection(username: str, status: str, collection_params: Collectio
     "/plays/{username}",
     tags=["Plays"],
     description=(
-        "Retrieve a user's board game plays from BoardGameGeek. "
-        "It allows optional parameters to filter the results: limit, "
-        "players involved, specific game ID, date range to narrow down the time period, "
-        "type and subtype of the game, and the page number for pagination. "
+        "Generates a URL for user's board game plays from BoardGameGeek. "
+        "Games can be sorted 'bydate' (returns game dates) or 'bygame' (returns number of plays). "
+        "Optional 'start', 'end', and 'page' parameters narrow results and allow pagination."
     ),
 )
-def get_user_plays(username: str, play_params: PlayParameters = Depends()):
+def get_user_plays(username: str, sort_type: str = 'bydate', play_params: PlayParameters = Depends()):
+    valid_sort_types = ["bygame", "bydate"]
+    if sort_type not in valid_sort_types:
+        raise HTTPException(status_code=400, detail=f"Invalid sort_type. Must be one of {valid_sort_types}")
     # Build the URL
-    url_params = {"username": username}
+    url = f"https://boardgamegeek.com/plays/{sort_type}/user/{username}"
 
-    for key, value in play_params.dict().items():
-        if value is not None:
-            url_params[key] = value
+    if play_params.start:
+        url += f"/start/{play_params.start}"
+    if play_params.end:
+        url += f"/end/{play_params.end}"
+    if play_params.page:
+        url += f"/page/{play_params.page}"
 
-    url = f"https://www.boardgamegeek.com/xmlapi2/plays?{urlencode(url_params)}"
-    response = get_url(url)
-    return play_converter(response.content, play_params.limit, play_params.with_players)
+    return {"url": url}
 
 
 if __name__ == "__main__":

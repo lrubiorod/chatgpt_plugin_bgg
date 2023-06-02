@@ -156,47 +156,6 @@ def user_converter(xml_data):
     return user_json
 
 
-def play_converter(xml_data, limit, with_players):
-    root = ElementTree.fromstring(xml_data)
-    plays = []
-
-    for idx, play in enumerate(root.findall('play')):
-        if limit and idx == limit:
-            break
-        item = play.find('item')
-        players = []
-
-        if with_players:
-            for player in play.findall('players/player'):
-                players.append({
-                    "username": player.get("username"),
-                    "userid": player.get("userid"),
-                    "name": player.get("name"),
-                    "score": player.get("score"),
-                    "win": player.get("win")
-                })
-
-        plays.append({
-            "id": play.get("id"),
-            "date": play.get("date"),
-            "location": play.get("location"),
-            "item": {
-                "name": item.get("name"),
-                "object_type": item.get("objecttype"),
-                "object_id": item.get("objectid"),
-            },
-            "players": players if with_players else None,
-        })
-
-    return {
-        "username": root.get("username"),
-        "userid": root.get("userid"),
-        "total": root.get("total"),
-        "page": root.get("page"),
-        "plays": plays
-    }
-
-
 def collection_converter(xml_data, page):
     root = ElementTree.fromstring(xml_data)
 
