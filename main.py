@@ -89,7 +89,7 @@ async def get_logo():
         "as 'id', 'name', and 'year published'."
     ),
 )
-def get_user_info(query: str):
+def search_query(query: str):
     response = get_url(f"https://www.boardgamegeek.com/xmlapi2/search?query={query}")
     return search_converter(response.content)
 
