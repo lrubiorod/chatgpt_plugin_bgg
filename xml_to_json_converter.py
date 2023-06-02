@@ -53,7 +53,23 @@ def search_converter(xml_data):
 
 
 def extract_result_votes(results):
-    return {result.get('value'): int(result.get('numvotes')) for result in results.findall('result')}
+    if not results:
+        return None
+
+    result_votes = {}
+    for result in results.findall('result'):
+        try:
+            value = result.get('value')
+            numvotes = int(result.get('numvotes'))
+            result_votes[value] = numvotes
+        except (TypeError, ValueError):
+            continue
+
+    max_votes = max(result_votes.values(), default=0)
+    if max_votes == 0:
+        return None
+    else:
+        return max(result_votes, key=result_votes.get)
 
 
 def thing_converter(xml_data):
@@ -66,34 +82,39 @@ def thing_converter(xml_data):
         suggested_player_age = None
         language_dependence = None
         for poll in item.findall('poll'):
-            if poll.get('name') == 'suggested_numplayers':
+            poll_name = poll.get('name')
+            if poll_name == 'suggested_numplayers':
                 for results in poll.findall('results'):
                     num_players = results.get('numplayers')
                     result_votes = extract_result_votes(results)
-                    suggested_num_players[num_players] = max(result_votes, key=result_votes.get)
+                    if result_votes:
+                        suggested_num_players[num_players] = result_votes
             else:
                 results = poll.find('results')
                 result_votes = extract_result_votes(results)
-                if poll.get('name') == 'suggested_playerage':
-                    suggested_player_age = max(result_votes, key=result_votes.get)
-                elif poll.get('name') == 'language_dependence':
-                    language_dependence = max(result_votes, key=result_votes.get)
+                if result_votes:
+                    if poll_name == 'suggested_playerage':
+                        suggested_player_age = result_votes
+                    elif poll_name == 'language_dependence':
+                        language_dependence = result_votes
 
         # Find links
+        links = item.findall('link')
         link_dict = {link_type: [] for link_type in LINK_TAGS}
-        for link in item.findall('link'):
+        for link in links:
             link_type = link.get('type')
             if link_type in link_dict and (link_type != 'boardgamepublisher' or len(link_dict[link_type]) == 0):
                 link_dict[link_type].append(link.get('value'))
 
         # Find ratings
         ratings_dict = {}
-        for ratings in item.find('statistics').find('ratings'):
-            if ratings.tag == 'ranks':
-                ranks = [{k: v for k, v in rank.attrib.items()} for rank in ratings.findall('rank')]
+        ratings = item.find('statistics').find('ratings')
+        for rating in ratings:
+            if rating.tag == 'ranks':
+                ranks = {rank.get('friendlyname'): rank.get('value') for rank in rating.findall('rank')}
                 ratings_dict['ranks'] = ranks
-            elif ratings.tag not in IGNORED_RATING_TAGS:
-                ratings_dict[ratings.tag] = ratings.get('value')
+            elif rating.tag not in IGNORED_RATING_TAGS:
+                ratings_dict[rating.tag] = rating.get('value')
 
         # Item dictionary
         item_dict = {
@@ -108,15 +129,18 @@ def thing_converter(xml_data):
             "playing_time": get_value(item, 'playingtime'),
             "min_play_time": get_value(item, 'minplaytime'),
             "max_play_time": get_value(item, 'maxplaytime'),
+            "min_age": get_value(item, 'minage'),
             "categories": link_dict['boardgamecategory'],
             "mechanics": link_dict['boardgamemechanic'],
             "families": link_dict['boardgamefamily'],
             "designers": link_dict['boardgamedesigner'],
             "artists": link_dict['boardgameartist'],
             "publishers": link_dict['boardgamepublisher'],
-            "suggested_num_players": suggested_num_players,
-            "suggested_player_age": suggested_player_age,
-            "language_dependence": language_dependence,
+            "poll": {
+                "suggested_num_players": suggested_num_players,
+                "suggested_player_age": suggested_player_age,
+                "language_dependence": language_dependence,
+            },
             "ratings": ratings_dict
         }
 
