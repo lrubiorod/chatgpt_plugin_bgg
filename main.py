@@ -10,6 +10,11 @@ from pydantic import BaseModel
 from typing import Optional
 from xml_to_json_converter import *
 
+BGG_SUBDOMAINS_IDS = [5499, 5497, 4666, 5498, 4664, 5496, 4665, 4667]
+BGG_SUBDOMAINS = ["familygames", "strategygames", "abstracts", "partygames", "wargames", "thematic", "childrensgames",
+                  "cgs"]
+
+
 # Define the FastAPI app
 app = FastAPI()
 
@@ -57,6 +62,29 @@ class CollectionParameters(BaseModel):
     maxplays: Optional[int] = None
 
 
+class SearchParameters(BaseModel):
+    page: Optional[int] = 1
+    q: Optional[str] = None
+    designerid: Optional[int] = None
+    publisherid: Optional[int] = None
+    yearpublished_min: Optional[int] = None
+    yearpublished_max: Optional[int] = None
+    minage_max: Optional[int] = None
+    numvoters_min: Optional[int] = None
+    numweights_min: Optional[int] = None
+    minplayers_max: Optional[int] = None
+    maxplayers_min: Optional[int] = None
+    leastplaytime_min: Optional[int] = None
+    playtime_max: Optional[int] = None
+    avgrating_min: Optional[float] = None
+    avgrating_max: Optional[float] = None
+    avgweight_min: Optional[float] = None
+    avgweight_max: Optional[float] = None
+    searchuser: Optional[str] = None
+    playerrangetype: Optional[str] = None
+    subdomain: Optional[str] = None
+
+
 allowed_status = ["own", "prevowned", "wishlist", "wanttoplay", "want", "wanttobuy", "preordered", "fortrade"]
 MAX_RETRIES = 3
 
@@ -102,6 +130,59 @@ def search_query(query: str, exact: Optional[bool] = True):
         raise HTTPException(status_code=404, detail="Item not found")
 
     return result
+
+
+@app.get(
+    "/advanced_search",
+    tags=["Search"],
+    description=(
+        "Generates a BoardGameGeek advanced search URL with filters such as designer, publisher, players, playtime, "
+        "and ratings. Valid subdomains include 'familygames', 'strategygames', 'partygames', 'wargames', 'thematic', "
+        "'childrensgames', 'cgs', and 'abstracts'."
+    ),
+)
+def advanced_search_query(search_params: SearchParameters = Depends()):
+    # Parameters dictionary
+    params_dict = {
+        "designerid": "include%5Bdesignerid%5D",
+        "publisherid": "include%5Bpublisherid%5D",
+        "yearpublished_min": "range%5Byearpublished%5D%5Bmin%5D",
+        "yearpublished_max": "range%5Byearpublished%5D%5Bmax%5D",
+        "minage_max": "range%5Bminage%5D%5Bmax%5D",
+        "numvoters_min": "range%5Bnumvoters%5D%5Bmin%5D",
+        "numweights_min": "range%5Bnumweights%5D%5Bmin%5D",
+        "minplayers_max": "range%5Bminplayers%5D%5Bmax%5D",
+        "maxplayers_min": "range%5Bmaxplayers%5D%5Bmin%5D",
+        "playerrangetype": "playerrangetype",
+        "leastplaytime_min": "range%5Bleastplaytime%5D%5Bmin%5D",
+        "playtime_max": "range%5Bplaytime%5D%5Bmax%5D",
+        "avgrating_min": "floatrange%5Bavgrating%5D%5Bmin%5D",
+        "avgrating_max": "floatrange%5Bavgrating%5D%5Bmax%5D",
+        "avgweight_min": "floatrange%5Bavgweight%5D%5Bmin%5D",
+        "avgweight_max": "floatrange%5Bavgweight%5D%5Bmax%5D",
+        "searchuser": "colfiltertype=owned&searchuser",
+    }
+
+    # Build the URL
+    url = f"https://boardgamegeek.com/search/boardgame/page/{search_params.page}?sort=rank&advsearch=1&q={search_params.q if search_params.q else ''}"
+
+    # Adding parameters to URL
+    for param, url_param in params_dict.items():
+        param_value = getattr(search_params, param, None)
+        if param_value:
+            url += f"&{url_param}={param_value}"
+
+    if search_params.subdomain:
+        subdomain = search_params.subdomain
+        if subdomain not in BGG_SUBDOMAINS:
+            raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of {BGG_SUBDOMAINS}")
+
+        subdomain_index = BGG_SUBDOMAINS.index(subdomain)
+        subdomain_id = BGG_SUBDOMAINS_IDS[subdomain_index]
+
+        url += f"&familyids%5B0%5D={subdomain_id}"
+
+    return {"url": url}
 
 
 @app.get(
@@ -220,7 +301,7 @@ def get_user_plays(username: str, sort_type: str = 'bydate', play_params: PlayPa
     ),
 )
 def get_top_ranked_games(category: str, page: int = None):
-    valid_categories = ["global", "familygames", "strategygames", "abstracts", "partygames", "wargames", "thematic", "childrensgamess", "cgs"]
+    valid_categories = BGG_SUBDOMAINS + ['global']
     if category not in valid_categories:
         raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of {valid_categories}")
 
