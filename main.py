@@ -1,10 +1,8 @@
 import requests
 import json
-import time
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from urllib.parse import urlencode
 from datetime import date
 from pydantic import BaseModel
 from typing import Optional
@@ -224,45 +222,6 @@ def get_hot_games(limit: int = None):
 def get_game_info(game_id: int):
     response = get_url(f"https://www.boardgamegeek.com/xmlapi2/thing?id={game_id}&stats=1")
     return thing_converter(response.content)
-
-
-@app.get(
-    "/collection/{username}/{status}",
-    tags=["Games"],
-    description=(
-        "Retrieves a BoardGameGeek user's collection based on status (own, prevowned, wishlist, etc.). "
-        "Filter options include item id, personal and BGG ratings, and number of plays. "
-        "Pagination is supported via the 'page' parameter, showing up to 100 items per page."
-    ),
-)
-def get_user_collection(username: str, status: str, collection_params: CollectionParameters = Depends()):
-    if status not in allowed_status:
-        raise HTTPException(status_code=400, detail=f"Status must be one of {allowed_status}")
-
-    # Build the URL
-    url_params = {
-        "username": username,
-        status: 1
-    }
-
-    for key, value in collection_params.dict().items():
-        if value is not None:
-            url_params[key] = value
-
-    url = f"https://www.boardgamegeek.com/xmlapi2/collection?{urlencode(url_params)}"
-
-    for _ in range(MAX_RETRIES):
-        response = get_url(url)
-        result = collection_converter(response.content, collection_params.page)
-
-        # If the result is not a "message" retry
-        if "message" not in result:
-            return result
-
-        time.sleep(2)
-
-    # If after all retries, we still get a message, return it
-    return result
 
 
 @app.get(
