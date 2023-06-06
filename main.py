@@ -210,6 +210,32 @@ def get_user_plays(username: str, sort_type: str = 'bydate', play_params: PlayPa
     return {"url": url}
 
 
+@app.get(
+    "/rank/{category}",
+    tags=["Games"],
+    description=(
+        "Generates a URL for the top-ranked board games on BoardGameGeek according to different categories: "
+        "'global', 'familygames', 'strategygames', 'partygames', 'wargames', 'thematic', 'childrensgames', "
+        "'cgs' or 'abstracts'. Optional 'page' parameter allow pagination."
+    ),
+)
+def get_top_ranked_games(category: str, page: int = None):
+    valid_categories = ["global", "familygames", "strategygames", "abstracts", "partygames", "wargames", "thematic", "childrensgamess", "cgs"]
+    if category not in valid_categories:
+        raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of {valid_categories}")
+
+    # Build the URL
+    if category == "global":
+        url = "https://boardgamegeek.com/browse/boardgame"
+    else:
+        url = f"https://boardgamegeek.com/{category}/browse/boardgame"
+
+    if page:
+        url += f"/page/{page}"
+
+    return {"url": url}
+
+
 if __name__ == "__main__":
     import uvicorn
 
