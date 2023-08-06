@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "name_for_human": "BoardGameGeek Assistant",
+  "name_for_human": "BGG Assistant",
   "name_for_model": "bgg_assistant",
   "description_for_human": "Discover board games with BoardGameGeek Assistant! Find games, see trending games, monitor your plays and collection...",
   "description_for_model": "A FastAPI server that provides an interface for interacting with the BoardGameGeek API. It offers routes for searching board game data, fetching detailed user information, retrieving trending games, obtaining detailed game statistics, and fetching user's gameplay history. It also allows for advanced search with multiple filters, viewing the most popular game categories, and generates URLs for viewing lists of top-ranked games across various categories.",
