@@ -25,9 +25,6 @@ Once the local server is running:
 4. Select "Develop your own plugin"
 5. Enter in `localhost:5003` since this is the URL the server is running on locally, then select "Find manifest file".
 
-If you prefer not to run the plugin locally, you may use the following URL server: `bggassistant-xsmbfdkqya-no.a.run.app`. 
-Please note that there may be instances when this server is inactive.
-
 The plugin has been successfully installed and activated! To begin, you may pose a question such as, 
 "What is the top ten list of trending games on BGG?"
 
@@ -35,7 +32,9 @@ The plugin has been successfully installed and activated! To begin, you may pose
 
 Please note that all the data utilized in this plugin is sourced from the [BoardGameGeek](https://boardgamegeek.com/) API. 
 You should ensure compliance with their [Terms of Use](https://boardgamegeek.com/wiki/page/XML_API_Terms_of_Use) 
-when using this plugin.
+when using this plugin. It means, due the BGG XMLAPI terms permit use only for non-commercial purposes, the code provided here should only be used locally and strictly without any commercial intentions.
+
+
 
 
 ## Getting help
